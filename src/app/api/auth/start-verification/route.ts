@@ -1,34 +1,41 @@
-import { jsonError } from "@/lib/api";
-import { startPhoneVerification } from "@/lib/store";
-import { VerificationMethod } from "@/lib/types";
+import { NextRequest } from "next/server";
+import { startVerificationSchema } from "@/lib/schemas";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { fail, ok } from "@/lib/http";
+import { supabaseAdmin } from "@/supabase/admin";
+import { getPublicEnv } from "@/lib/env";
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const phone = String(body.phone || "").trim();
-    const country = String(body.country || "").trim();
-    const method = String(body.method || "telegram") as VerificationMethod;
-
-    if (!phone || !country) {
-      return jsonError("phone and country are required", 422);
-    }
-
-    if (method !== "telegram" && method !== "sms") {
-      return jsonError("method must be telegram or sms", 422);
-    }
-
-    const session = startPhoneVerification(phone, country, method);
-
-    return Response.json({
-      sessionId: session.id,
-      expiresAt: session.expiresAt,
-      deliveryHint:
-        method === "telegram"
-          ? "Код отправлен в Telegram-бота (MVP mock)."
-          : "Код отправлен по SMS (MVP mock).",
-      devCode: "123456",
-    });
-  } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "verification start failed", 400);
+export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "local";
+  const rate = checkRateLimit(`start-verification:${ip}`, 5, 10 * 60 * 1000);
+  if (!rate.ok) {
+    return fail("Too many attempts, try later", 429);
   }
+
+  const body = await req.json().catch(() => null);
+  const parsed = startVerificationSchema.safeParse(body);
+  if (!parsed.success) {
+    return fail(parsed.error.message, 422);
+  }
+
+  const token = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+  const { error } = await supabaseAdmin.from("telegram_verifications").insert({
+    phone: parsed.data.phone,
+    token,
+    status: "pending",
+    expires_at: expiresAt,
+  });
+
+  if (error) {
+    return fail(error.message, 500);
+  }
+
+  const env = getPublicEnv();
+  return ok({
+    token,
+    expiresAt,
+    telegramDeepLink: `https://t.me/${env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME}?start=${token}`,
+  });
 }

@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Meetap MVP (Next.js 14 + Supabase + OpenAI)
 
-## Getting Started
+MVP соцсети для офлайн-знакомств.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Next.js 14 (App Router) + TypeScript + TailwindCSS
+- shadcn-style UI components
+- Next.js API Routes
+- Supabase (Postgres + Storage + Auth)
+- OpenAI (`gpt-4o-mini`)
+- framer-motion
+- Deploy: Vercel
+
+## Routes
+
+- `/` — landing
+- `/register` — Telegram phone verification + name
+- `/feed` — контент (Daily Duo + gate)
+- `/events` — мероприятия
+- `/events/[id]` — детальная страница мероприятия
+- `/contacts` — поиск людей/групп
+- `/profile/[id]` — профиль пользователя
+- `/profile/me` — мой профиль и настройки
+
+Protected routing реализован в `middleware.ts`.
+
+## Environment variables
+
+Create `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=
+
+SUPABASE_SERVICE_ROLE_KEY=
+OPENAI_API_KEY=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_WEBHOOK_SECRET=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Supabase setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create a Supabase project.
+2. Run SQL from:
+- `supabase/migrations/001_init.sql`
+- `supabase/seed.sql`
+3. Create Telegram bot via BotFather and set username/token.
+4. Configure Telegram webhook:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+curl -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" \
+  -d "url=https://<your-domain>/api/telegram/webhook" \
+  -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>"
+```
 
-## Learn More
+## Local run
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Core API
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `POST /api/auth/start-verification`
+- `GET /api/auth/check-verification?token=...`
+- `POST /api/auth/complete-registration`
+- `POST /api/telegram/webhook`
+- `GET /api/feed/posts`
+- `POST /api/feed/posts/create-daily-duo`
+- `POST /api/feed/posts/:id/react`
+- `GET /api/events`
+- `GET /api/events/:id`
+- `POST /api/events/:id/join`
+- `POST /api/events/:id/find-3`
+- `GET /api/contacts`
+- `GET/PATCH /api/profile/me`
+- `GET /api/profile/:id`
+- `POST /api/ai/face-validate`
+- `POST /api/ai/icebreaker`
 
-## Deploy on Vercel
+## Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Daily Duo requires 2 photos; AI face-check ensures at least 2 people.
+- Feed lock is active if `users.last_post_at` older than 7 days.
+- If AI fails, fallback responses are returned.
