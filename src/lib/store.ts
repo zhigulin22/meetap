@@ -8,36 +8,41 @@ import {
   Profile,
   ReportBlock,
   User,
+  VerificationMethod,
+  VerificationSession,
 } from "@/lib/types";
 
 const now = () => new Date().toISOString();
 
+function id(prefix: string) {
+  return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 const users: User[] = [
   {
     id: "u1",
-    email: "anna@example.com",
-    password: "123456",
+    phone: "+79990000001",
+    country: "RU",
+    name: "Аня",
+    isVerified: true,
     createdAt: now(),
     status: "active",
   },
   {
     id: "u2",
-    email: "ivan@example.com",
-    password: "123456",
+    phone: "+79990000002",
+    country: "RU",
+    name: "Иван",
+    isVerified: true,
     createdAt: now(),
     status: "active",
   },
   {
     id: "u3",
-    email: "liza@example.com",
-    password: "123456",
-    createdAt: now(),
-    status: "active",
-  },
-  {
-    id: "u4",
-    email: "max@example.com",
-    password: "123456",
+    phone: "+79990000003",
+    country: "RU",
+    name: "Лиза",
+    isVerified: true,
     createdAt: now(),
     status: "active",
   },
@@ -48,10 +53,12 @@ const profiles: Profile[] = [
     userId: "u1",
     name: "Аня",
     age: 21,
+    country: "RU",
     city: "Москва",
     university: "ВШЭ",
     faculty: "ФКН",
-    bio: "Люблю городские события, выставки и бег по набережной.",
+    bio: "Люблю городские события, выставки и бег.",
+    facts: ["Бегаю по выходным", "Люблю джаз", "Пишу заметки о кино"],
     interests: ["искусство", "прогулки", "кофе", "лекции"],
     values: ["искренность", "развитие"],
     goal: "relationship",
@@ -60,10 +67,12 @@ const profiles: Profile[] = [
     userId: "u2",
     name: "Иван",
     age: 23,
+    country: "RU",
     city: "Москва",
     university: "МГУ",
     faculty: "Эконом",
     bio: "Часто хожу на музыкальные и бизнес-ивенты.",
+    facts: ["Играю в падел", "Делаю pet-проекты", "Люблю ранние завтраки"],
     interests: ["музыка", "стартапы", "спорт"],
     values: ["честность", "амбиции"],
     goal: "networking",
@@ -72,25 +81,15 @@ const profiles: Profile[] = [
     userId: "u3",
     name: "Лиза",
     age: 22,
+    country: "RU",
     city: "Москва",
     university: "РАНХиГС",
     faculty: "Медиаком",
-    bio: "Фотография, уютные бары, фестивали и кино.",
+    bio: "Фотография, уютные бары и фестивали.",
+    facts: ["Снимаю на пленку", "Люблю научпоп", "Хожу на стендап"],
     interests: ["фото", "кино", "фестивали", "кофе"],
     values: ["доброта", "свобода"],
     goal: "friendship",
-  },
-  {
-    userId: "u4",
-    name: "Макс",
-    age: 24,
-    city: "Москва",
-    university: "МИФИ",
-    faculty: "ИТ",
-    bio: "Технологии, митапы, бег и шахматы.",
-    interests: ["технологии", "митапы", "бег", "шахматы"],
-    values: ["уважение", "ответственность"],
-    goal: "relationship",
   },
 ];
 
@@ -99,37 +98,34 @@ const events: EventItem[] = [
     id: "e1",
     city: "Москва",
     title: "Лекция по современному искусству",
-    description: "Вечерняя лекция с обсуждением в малых группах.",
-    startTime: "2026-02-28T18:30:00.000Z",
+    description: "Камерная лекция и знакомство в небольших группах.",
+    startTime: "2026-03-01T18:30:00.000Z",
     place: "ГЭС-2",
     tags: ["искусство", "лекции", "нетворк"],
+    mediaType: "image",
+    mediaUrl: "https://images.unsplash.com/photo-1505801315003-618f97514f4f?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: "e2",
     city: "Москва",
-    title: "Стартап-митап: AI и продукты",
-    description: "Короткие доклады и знакомство участников.",
-    startTime: "2026-03-02T16:00:00.000Z",
-    place: "Красный Октябрь",
-    tags: ["стартапы", "технологии", "митапы"],
+    title: "City Run Club",
+    description: "Утренний бег и кофе после старта.",
+    startTime: "2026-03-02T07:30:00.000Z",
+    place: "Парк Горького",
+    tags: ["спорт", "бег", "кофе"],
+    mediaType: "video",
+    mediaUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
   },
   {
     id: "e3",
     city: "Москва",
-    title: "Ночной кинопоказ indie-фильмов",
-    description: "Показ + обсуждение за кофе.",
+    title: "Ночной кинопоказ indie",
+    description: "Показ + обсуждение фильма у бара.",
     startTime: "2026-03-04T19:00:00.000Z",
     place: "Хлебозавод",
-    tags: ["кино", "кофе", "фестивали"],
-  },
-  {
-    id: "e4",
-    city: "Москва",
-    title: "Утренний run club",
-    description: "Легкий темп, знакомство после пробежки.",
-    startTime: "2026-03-01T08:00:00.000Z",
-    place: "Парк Горького",
-    tags: ["спорт", "бег", "прогулки"],
+    tags: ["кино", "фестивали", "бар"],
+    mediaType: "image",
+    mediaUrl: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
   },
 ];
 
@@ -137,74 +133,79 @@ const eventInteractions: EventInteraction[] = [];
 const matches: Match[] = [];
 const messages: Message[] = [];
 const reportsBlocks: ReportBlock[] = [];
+const verificationSessions: VerificationSession[] = [];
 
-function id(prefix: string) {
-  return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+export function startPhoneVerification(
+  phone: string,
+  country: string,
+  method: VerificationMethod,
+) {
+  const session: VerificationSession = {
+    id: id("ver"),
+    phone,
+    country,
+    method,
+    code: "123456",
+    createdAt: now(),
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+  };
+  verificationSessions.push(session);
+  return session;
 }
 
-export const db = {
-  users,
-  profiles,
-  events,
-  eventInteractions,
-  matches,
-  messages,
-  reportsBlocks,
-};
+export function verifyPhoneCode(sessionId: string, code: string, name: string) {
+  const session = verificationSessions.find((s) => s.id === sessionId);
+  if (!session) {
+    throw new Error("Verification session not found");
+  }
+  if (session.code !== code) {
+    throw new Error("Invalid code");
+  }
+  if (new Date(session.expiresAt).getTime() < Date.now()) {
+    throw new Error("Verification code expired");
+  }
+
+  let user = users.find((u) => u.phone === session.phone);
+  if (!user) {
+    user = {
+      id: id("u"),
+      phone: session.phone,
+      country: session.country,
+      name,
+      isVerified: true,
+      createdAt: now(),
+      status: "active",
+    };
+    users.push(user);
+
+    profiles.push({
+      userId: user.id,
+      name,
+      age: 20,
+      country: session.country,
+      city: "",
+      university: "",
+      faculty: "",
+      bio: "",
+      facts: ["", "", ""],
+      interests: [],
+      values: [],
+      goal: "friendship",
+    });
+  }
+
+  return user;
+}
 
 export function getUserById(userId: string) {
   return users.find((u) => u.id === userId);
-}
-
-export function getUserByEmail(email: string) {
-  return users.find((u) => u.email.toLowerCase() === email.toLowerCase());
 }
 
 export function getProfileByUserId(userId: string) {
   return profiles.find((p) => p.userId === userId);
 }
 
-export function registerUser(email: string, password: string, name: string) {
-  const existing = getUserByEmail(email);
-  if (existing) {
-    throw new Error("Email already exists");
-  }
-  const user: User = {
-    id: id("u"),
-    email,
-    password,
-    createdAt: now(),
-    status: "active",
-  };
-  const profile: Profile = {
-    userId: user.id,
-    name,
-    age: 20,
-    city: "Москва",
-    university: "",
-    faculty: "",
-    bio: "",
-    interests: [],
-    values: [],
-    goal: "friendship",
-  };
-  users.push(user);
-  profiles.push(profile);
-  return user;
-}
-
-export function login(email: string, password: string) {
-  const user = getUserByEmail(email);
-  if (!user || user.password !== password || user.status !== "active") {
-    throw new Error("Invalid credentials");
-  }
-  return user;
-}
-
-export function updateProfile(
-  userId: string,
-  patch: Partial<Omit<Profile, "userId">>,
-) {
+export function updateProfile(userId: string, patch: Partial<Omit<Profile, "userId">>) {
   const profile = getProfileByUserId(userId);
   if (!profile) {
     throw new Error("Profile not found");
@@ -225,25 +226,14 @@ export function listEventsForUser(userId: string, city?: string) {
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 }
 
-export function upsertEventInteraction(
-  userId: string,
-  eventId: string,
-  action: EventAction,
-) {
-  const existing = eventInteractions.find(
-    (x) => x.userId === userId && x.eventId === eventId,
-  );
+export function upsertEventInteraction(userId: string, eventId: string, action: EventAction) {
+  const existing = eventInteractions.find((x) => x.userId === userId && x.eventId === eventId);
   if (existing) {
     existing.action = action;
     existing.createdAt = now();
     return existing;
   }
-  const interaction: EventInteraction = {
-    userId,
-    eventId,
-    action,
-    createdAt: now(),
-  };
+  const interaction: EventInteraction = { userId, eventId, action, createdAt: now() };
   eventInteractions.push(interaction);
   return interaction;
 }
@@ -254,32 +244,19 @@ export function buildCandidates(userId: string): Candidate[] {
     return [];
   }
 
-  const myLikedEvents = eventInteractions
-    .filter((x) => x.userId === userId && x.action === "like")
-    .map((x) => events.find((e) => e.id === x.eventId))
-    .filter(Boolean) as EventItem[];
-
   return profiles
-    .filter((p) => p.userId !== userId && p.city === me.city)
+    .filter((p) => p.userId !== userId && (!me.city || p.city === me.city))
     .map((candidate) => {
-      const commonInterests = candidate.interests.filter((i) =>
-        me.interests.includes(i),
-      );
-      const commonLikedEventTags = myLikedEvents.flatMap((e) =>
-        e.tags.filter((t) => candidate.interests.includes(t)),
-      );
-      const goalBoost = me.goal === candidate.goal ? 1 : 0;
-      const score =
-        commonInterests.length * 2 + commonLikedEventTags.length + goalBoost;
-      const reason =
-        commonInterests.length > 0
-          ? `Общие интересы: ${commonInterests.slice(0, 3).join(", ")}`
-          : "Похожий формат активности в городе";
+      const commonInterests = candidate.interests.filter((i) => me.interests.includes(i));
+      const score = commonInterests.length * 2 + (me.goal === candidate.goal ? 1 : 0);
       return {
         userId,
         candidateUserId: candidate.userId,
         score,
-        reason,
+        reason:
+          commonInterests.length > 0
+            ? `Общие интересы: ${commonInterests.slice(0, 3).join(", ")}`
+            : "Похожий формат знакомств",
       };
     })
     .sort((a, b) => b.score - a.score);
@@ -295,10 +272,6 @@ export function likePerson(userId: string, targetUserId: string) {
     return existing;
   }
 
-  const reverseLike = eventInteractions.some(
-    (x) => x.userId === targetUserId && x.action === "like",
-  );
-
   const match: Match = {
     id: id("m"),
     user1Id: userId,
@@ -306,12 +279,14 @@ export function likePerson(userId: string, targetUserId: string) {
     status: "active",
     createdAt: now(),
   };
-
-  if (reverseLike || Math.random() > 0.4) {
-    matches.push(match);
-  }
-
+  matches.push(match);
   return match;
+}
+
+export function listMatchesForUser(userId: string) {
+  return matches.filter(
+    (m) => m.status === "active" && (m.user1Id === userId || m.user2Id === userId),
+  );
 }
 
 export function getMatchMessages(matchId: string) {
@@ -320,31 +295,17 @@ export function getMatchMessages(matchId: string) {
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-export function createMessage(
-  matchId: string,
-  senderId: string,
-  text: string,
-  wasLlmSuggested = false,
-) {
+export function createMessage(matchId: string, senderId: string, text: string, wasLlmSuggested = false) {
   const message: Message = {
     id: id("msg"),
     matchId,
     senderId,
     text,
     createdAt: now(),
-    metadata: {
-      wasLlmSuggested,
-      promptVersion: "v0.1",
-    },
+    metadata: { wasLlmSuggested, promptVersion: "v0.2" },
   };
   messages.push(message);
   return message;
-}
-
-export function listMatchesForUser(userId: string) {
-  return matches.filter(
-    (m) => m.status === "active" && (m.user1Id === userId || m.user2Id === userId),
-  );
 }
 
 export function reportOrBlock(

@@ -1,9 +1,23 @@
 export type RelationshipGoal = "friendship" | "relationship" | "networking";
 
+export type VerificationMethod = "telegram" | "sms";
+
+export type VerificationSession = {
+  id: string;
+  phone: string;
+  country: string;
+  method: VerificationMethod;
+  code: string;
+  createdAt: string;
+  expiresAt: string;
+};
+
 export type User = {
   id: string;
-  email: string;
-  password: string;
+  phone: string;
+  country: string;
+  name: string;
+  isVerified: boolean;
   createdAt: string;
   status: "active" | "blocked";
 };
@@ -12,10 +26,12 @@ export type Profile = {
   userId: string;
   name: string;
   age: number;
+  country: string;
   city: string;
   university: string;
   faculty: string;
   bio: string;
+  facts: [string, string, string];
   interests: string[];
   values: string[];
   goal: RelationshipGoal;
@@ -29,6 +45,8 @@ export type EventItem = {
   startTime: string;
   place: string;
   tags: string[];
+  mediaType: "image" | "video";
+  mediaUrl: string;
 };
 
 export type EventAction = "like" | "dislike" | "save" | "ignore";
